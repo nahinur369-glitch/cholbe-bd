@@ -1,15 +1,10 @@
-<!doctype html>
-<!-- Replace the placeholder below with your NEW TomTom key. -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Bangladesh Navigator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  >
+  <title>Bangladesh Live Traffic</title>
 
   <style>
     * {
@@ -22,1006 +17,609 @@
       height: 100%;
       margin: 0;
       font-family: Arial, sans-serif;
+      background: #eef5f3;
+      color: #12372c;
     }
 
-    #map {
+    .app {
       width: 100%;
       height: 100%;
+      display: flex;
     }
 
-    .panel {
-      position: fixed;
-      z-index: 1000;
-      top: 20px;
-      left: 20px;
-      width: 340px;
-      max-height: calc(100vh - 40px);
+    .sidebar {
+      width: 370px;
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.13);
       overflow-y: auto;
-      padding: 18px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.96);
-      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.22);
+      z-index: 2;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      background: #087f5b;
+      color: white;
+      font-size: 26px;
     }
 
     h1 {
-      margin: 0 0 4px;
-      color: #07543c;
-      font-size: 23px;
+      margin: 0;
+      font-size: 27px;
+      color: #075f47;
     }
 
     .subtitle {
-      margin: 0 0 16px;
-      color: #65736e;
-      font-size: 12px;
+      margin: 5px 0 24px;
+      color: #66756f;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      margin-bottom: 22px;
+      border-radius: 20px;
+      background: #e7f8f0;
+      color: #087f5b;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .live-dot {
+      width: 10px;
+      height: 10px;
+      background: #ef233c;
+      border-radius: 50%;
+      animation: pulse 1.3s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(239, 35, 60, 0.5);
+      }
+
+      70% {
+        box-shadow: 0 0 0 8px rgba(239, 35, 60, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 35, 60, 0);
+      }
     }
 
     label {
       display: block;
-      margin: 12px 0 5px;
-      color: #4b5e57;
-      font-size: 11px;
+      margin-bottom: 8px;
       font-weight: bold;
+      font-size: 14px;
     }
 
-    input,
-    select,
-    button {
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    input {
       width: 100%;
-      height: 42px;
-      padding: 0 11px;
-      border: 1px solid #d8e1dc;
-      border-radius: 11px;
-      font-size: 13px;
-    }
-
-    input,
-    select {
-      background: #fff;
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid #cbd8d3;
+      border-radius: 12px;
       outline: none;
+      font-size: 15px;
     }
 
-    input:focus,
-    select:focus {
-      border-color: #0f7a55;
-      box-shadow: 0 0 0 3px rgba(15, 122, 85, 0.12);
+    input:focus {
+      border-color: #087f5b;
+      box-shadow: 0 0 0 3px rgba(8, 127, 91, 0.12);
     }
 
     button {
-      border: 0;
-      color: #fff;
-      background: #0f7a55;
+      border: none;
+      border-radius: 12px;
       cursor: pointer;
+      font-size: 14px;
       font-weight: bold;
+      transition: 0.2s;
     }
 
     button:hover {
-      background: #07543c;
+      transform: translateY(-1px);
     }
 
     button:disabled {
+      opacity: 0.6;
       cursor: wait;
-      opacity: 0.65;
+      transform: none;
     }
 
-    .row {
+    .search-button {
+      padding: 0 18px;
+      background: #087f5b;
+      color: white;
+    }
+
+    .gps-button,
+    .navigate-button {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .gps-button {
+      background: #e5f2ed;
+      color: #075f47;
+    }
+
+    .navigate-button {
+      margin-top: 16px;
+      background: #087f5b;
+      color: white;
+      font-size: 16px;
+    }
+
+    .section-title {
+      margin: 6px 0 12px;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .places {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 9px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
     }
 
-    .secondary {
-      color: #31594b;
-      background: #edf5f0;
+    .place-button {
+      padding: 12px 8px;
+      background: #f0f5f3;
+      color: #31584c;
+      border: 1px solid #dbe6e2;
     }
 
-    .secondary:hover {
-      background: #dfeee5;
-    }
-
-    .route-button {
-      margin-top: 13px;
-      background: linear-gradient(135deg, #07543c, #0f9363);
-    }
-
-    .result {
-      display: none;
-      margin-top: 14px;
-      padding: 13px;
-      border: 1px solid #d6e8dc;
+    .current-place {
+      margin-top: 18px;
+      padding: 15px;
+      background: #edf8f3;
+      border: 1px solid #cce8dc;
       border-radius: 13px;
-      background: #f1faef;
     }
 
-    .result.show {
+    .current-place small {
       display: block;
+      color: #658076;
+      margin-bottom: 5px;
     }
 
-    .result-title {
-      margin-bottom: 10px;
-      color: #07543c;
-      font-size: 14px;
+    #locationName {
       font-weight: bold;
+      line-height: 1.4;
     }
 
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-
-    .metric {
-      padding: 8px 5px;
-      border-radius: 9px;
-      background: #fff;
-      text-align: center;
-    }
-
-    .metric strong {
-      display: block;
-      color: #10231d;
-      font-size: 14px;
-    }
-
-    .metric span {
-      color: #718079;
-      font-size: 9px;
-    }
-
-    .traffic-message {
-      margin-top: 9px;
-      padding: 8px;
-      border-radius: 9px;
-      color: #07543c;
-      background: #dcf5e5;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .traffic-message.slow {
-      color: #8a3500;
-      background: #ffe1ce;
-    }
-
-    .legend {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+    #status {
       margin-top: 15px;
-      padding: 10px;
-      border-radius: 11px;
-      background: #f2f5f3;
-      color: #64726d;
-      font-size: 10px;
+      min-height: 20px;
+      color: #66756f;
+      font-size: 13px;
+      line-height: 1.4;
     }
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .line {
-      width: 24px;
-      height: 5px;
-      border-radius: 99px;
-    }
-
-    .green {
-      background: #2ae57b;
-    }
-
-    .yellow {
-      background: #ffc105;
-    }
-
-    .red {
-      background: #fb2d09;
-    }
-
-    .dark-red {
-      background: #ad0000;
-    }
-
-    .map-buttons {
-      position: fixed;
-      z-index: 1000;
-      top: 20px;
-      right: 20px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .map-buttons button {
-      width: 48px;
-      height: 48px;
-      padding: 0;
-      border-radius: 14px;
-      color: #174d3b;
-      background: #fff;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
-      font-size: 20px;
-    }
-
-    .map-buttons button.active {
-      color: #fff;
-      background: #0f7a55;
-    }
-
-    .status {
-      margin-top: 10px;
-      color: #6b7773;
-      font-size: 10px;
+    .notice {
+      margin-top: 18px;
+      padding: 13px;
+      border-radius: 12px;
+      background: #fff7df;
+      color: #705c20;
+      font-size: 12px;
       line-height: 1.5;
     }
 
-    .marker-label {
-      display: grid;
-      width: 32px;
-      height: 32px;
-      place-items: center;
-      border: 3px solid white;
-      border-radius: 50%;
-      color: white;
-      background: #0f7a55;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    .map-container {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      background: #dfeae6;
+    }
+
+    #wazeMap {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .map-label {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      z-index: 2;
+      padding: 10px 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 5px 18px rgba(0, 0, 0, 0.15);
+      font-size: 13px;
       font-weight: bold;
+      color: #087f5b;
+      pointer-events: none;
     }
 
-    .marker-label.end {
-      border-radius: 9px;
-      background: #d75140;
-    }
-
-    @media (max-width: 700px) {
-      .panel {
-        top: auto;
-        right: 8px;
-        bottom: 8px;
-        left: 8px;
-        width: auto;
-        max-height: 57vh;
-        border-radius: 18px;
+    @media (max-width: 800px) {
+      .app {
+        flex-direction: column;
       }
 
-      .map-buttons {
-        top: 10px;
-        right: 10px;
+      .sidebar {
+        width: 100%;
+        height: 43%;
+        padding: 17px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.13);
       }
 
-      .map-buttons button {
-        width: 43px;
-        height: 43px;
+      .map-container {
+        height: 57%;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .logo-icon {
+        width: 42px;
+        height: 42px;
+      }
+
+      .subtitle {
+        margin-bottom: 14px;
+      }
+
+      .live-badge {
+        margin-bottom: 15px;
       }
     }
   </style>
 </head>
 
 <body>
-  <div id="map"></div>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">🚦</div>
 
-  <div class="map-buttons">
-    <button id="trafficButton" title="Show or hide traffic">🚦</button>
-    <button id="gpsButton" title="Use my GPS location">📍</button>
+        <div>
+          <h1>Bangladesh Traffic</h1>
+          <div class="subtitle">Free live traffic map powered by Waze</div>
+        </div>
+      </div>
+
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        LIVE TRAFFIC
+      </div>
+
+      <form id="searchForm">
+        <label for="placeInput">Search an area in Bangladesh</label>
+
+        <div class="search-row">
+          <input
+            id="placeInput"
+            type="text"
+            placeholder="Example: Jatrabari, Dhaka"
+            autocomplete="off"
+            required
+          >
+
+          <button class="search-button" id="searchButton" type="submit">
+            Search
+          </button>
+        </div>
+      </form>
+
+      <button class="gps-button" id="gpsButton" type="button">
+        📍 Show My GPS Location
+      </button>
+
+      <div class="section-title">Quick traffic locations</div>
+
+      <div class="places">
+        <button
+          class="place-button"
+          type="button"
+          data-name="Dhaka"
+          data-lat="23.8103"
+          data-lon="90.4125"
+          data-zoom="12"
+        >
+          Dhaka
+        </button>
+
+        <button
+          class="place-button"
+          type="button"
+          data-name="Jatrabari"
+          data-lat="23.7104"
+          data-lon="90.4344"
+          data-zoom="15"
+        >
+          Jatrabari
+        </button>
+
+        <button
+          class="place-button"
+          type="button"
+          data-name="Gulistan"
+          data-lat="23.7250"
+          data-lon="90.4116"
+          data-zoom="15"
+        >
+          Gulistan
+        </button>
+
+        <button
+          class="place-button"
+          type="button"
+          data-name="Farmgate"
+          data-lat="23.7588"
+          data-lon="90.3897"
+          data-zoom="15"
+        >
+          Farmgate
+        </button>
+
+        <button
+          class="place-button"
+          type="button"
+          data-name="Mohakhali"
+          data-lat="23.7797"
+          data-lon="90.3987"
+          data-zoom="15"
+        >
+          Mohakhali
+        </button>
+
+        <button
+          class="place-button"
+          type="button"
+          data-name="Uttara"
+          data-lat="23.8759"
+          data-lon="90.3795"
+          data-zoom="14"
+        >
+          Uttara
+        </button>
+
+        <button
+          class="place-button"
+          type="button"
+          data-name="Chattogram"
+          data-lat="22.3569"
+          data-lon="91.7832"
+          data-zoom="13"
+        >
+          Chattogram
+        </button>
+
+        <button
+          class="place-button"
+          type="button"
+          data-name="Savar"
+          data-lat="23.8583"
+          data-lon="90.2667"
+          data-zoom="14"
+        >
+          Savar
+        </button>
+      </div>
+
+      <div class="current-place">
+        <small>Currently viewing</small>
+        <div id="locationName">Dhaka, Bangladesh</div>
+      </div>
+
+      <button class="navigate-button" id="navigateButton" type="button">
+        🧭 Open Navigation in Waze
+      </button>
+
+      <div id="status">Waze live-traffic map loaded.</div>
+
+      <div class="notice">
+        Traffic information depends on active Waze users. Exact traffic-delay
+        numbers cannot be taken from the free Waze iframe.
+      </div>
+    </aside>
+
+    <main class="map-container">
+      <div class="map-label">🚦 Waze Live Traffic</div>
+
+      <iframe
+        id="wazeMap"
+        title="Waze Live Traffic Map"
+        src="https://embed.waze.com/iframe?zoom=12&lat=23.8103&lon=90.4125"
+        allow="geolocation"
+        loading="eager"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+    </main>
   </div>
 
-  <main class="panel">
-    <h1>Bangladesh Navigator</h1>
-    <p class="subtitle">TomTom live traffic and traffic-aware routes</p>
-
-    <label for="vehicle">Vehicle</label>
-    <select id="vehicle">
-      <option value="motorcycle">🏍️ Motorcycle</option>
-      <option value="rickshaw">🛺 Rickshaw</option>
-      <option value="cng">🚕 CNG</option>
-      <option value="car" selected>🚗 Car</option>
-      <option value="bus">🚌 Bus</option>
-      <option value="truck">🚚 Truck</option>
-      <option value="ambulance">🚑 Ambulance</option>
-    </select>
-
-    <label for="startInput">Starting place</label>
-    <input
-      id="startInput"
-      placeholder="Example: Mirpur 10, Dhaka"
-      autocomplete="off"
-    >
-
-    <label for="endInput">Destination</label>
-    <input
-      id="endInput"
-      placeholder="Example: Motijheel, Dhaka"
-      autocomplete="off"
-    >
-
-    <div class="row">
-      <button class="secondary" id="pickStartButton">
-        Pick start
-      </button>
-
-      <button class="secondary" id="pickEndButton">
-        Pick destination
-      </button>
-    </div>
-
-    <div class="row">
-      <button class="secondary" id="locationButton">
-        My GPS
-      </button>
-
-      <button class="secondary" id="swapButton">
-        Swap
-      </button>
-    </div>
-
-    <button class="route-button" id="routeButton">
-      Find live-traffic route
-    </button>
-
-    <section class="result" id="result">
-      <div class="result-title" id="resultTitle">
-        Best route
-      </div>
-
-      <div class="metrics">
-        <div class="metric">
-          <strong id="distance">—</strong>
-          <span>Distance</span>
-        </div>
-
-        <div class="metric">
-          <strong id="duration">—</strong>
-          <span>Travel time</span>
-        </div>
-
-        <div class="metric">
-          <strong id="delay">—</strong>
-          <span>Traffic delay</span>
-        </div>
-      </div>
-
-      <div class="traffic-message" id="trafficMessage">
-        Live traffic checked
-      </div>
-    </section>
-
-    <div class="legend">
-      <div class="legend-item">
-        <span class="line green"></span>
-        Clear
-      </div>
-
-      <div class="legend-item">
-        <span class="line yellow"></span>
-        Slow
-      </div>
-
-      <div class="legend-item">
-        <span class="line red"></span>
-        Heavy
-      </div>
-
-      <div class="legend-item">
-        <span class="line dark-red"></span>
-        Closed
-      </div>
-    </div>
-
-    <div class="status" id="status">
-      Paste your new TomTom key in TOMTOM_KEY. Then click the map
-      to select the start and destination.
-    </div>
-  </main>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
-    const TOMTOM_KEY = "1ygn1YPd8JOFbrvsnkaOAa24Pny7wJyn";
+    const wazeMap = document.getElementById("wazeMap");
+    const searchForm = document.getElementById("searchForm");
+    const placeInput = document.getElementById("placeInput");
+    const searchButton = document.getElementById("searchButton");
+    const gpsButton = document.getElementById("gpsButton");
+    const navigateButton = document.getElementById("navigateButton");
+    const locationName = document.getElementById("locationName");
+    const status = document.getElementById("status");
 
-    const vehicleTimeFactor = {
-      motorcycle: 1.05,
-      rickshaw: 2.1,
-      cng: 1.15,
-      car: 1,
-      bus: 1.3,
-      truck: 1.45,
-      ambulance: 0.9
-    };
+    let currentLatitude = 23.8103;
+    let currentLongitude = 90.4125;
+    let currentZoom = 12;
 
-    const map = L.map("map").setView([23.8103, 90.4125], 12);
+    function updateMap(latitude, longitude, name, zoom = 15, showPin = true) {
+      currentLatitude = Number(latitude);
+      currentLongitude = Number(longitude);
+      currentZoom = Number(zoom);
 
-    L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      {
-        maxZoom: 19,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Traffic &copy; TomTom'
-      }
-    ).addTo(map);
+      const pinParameter = showPin ? "&pin=1" : "";
 
-    const trafficLayer = L.tileLayer(
-      "https://api.tomtom.com/maps/orbis/traffic/tile/flow/{z}/{x}/{y}.png" +
-      "?apiVersion=1" +
-      "&style=light" +
-      "&tileSize=256" +
-      "&key=" + encodeURIComponent(TOMTOM_KEY),
-      {
-        maxZoom: 22,
-        opacity: 0.9
-      }
-    );
+      wazeMap.src =
+        "https://embed.waze.com/iframe" +
+        "?zoom=" + encodeURIComponent(currentZoom) +
+        "&lat=" + encodeURIComponent(currentLatitude) +
+        "&lon=" + encodeURIComponent(currentLongitude) +
+        pinParameter;
 
-    const state = {
-      start: null,
-      end: null,
-      startMarker: null,
-      endMarker: null,
-      routeLayers: [],
-      picking: "start",
-      trafficVisible: false
-    };
-
-    const elements = {
-      startInput: document.getElementById("startInput"),
-      endInput: document.getElementById("endInput"),
-      vehicle: document.getElementById("vehicle"),
-      routeButton: document.getElementById("routeButton"),
-      trafficButton: document.getElementById("trafficButton"),
-      gpsButton: document.getElementById("gpsButton"),
-      locationButton: document.getElementById("locationButton"),
-      pickStartButton: document.getElementById("pickStartButton"),
-      pickEndButton: document.getElementById("pickEndButton"),
-      swapButton: document.getElementById("swapButton"),
-      status: document.getElementById("status"),
-      result: document.getElementById("result"),
-      resultTitle: document.getElementById("resultTitle"),
-      distance: document.getElementById("distance"),
-      duration: document.getElementById("duration"),
-      delay: document.getElementById("delay"),
-      trafficMessage: document.getElementById("trafficMessage")
-    };
-
-    function hasValidKey() {
-      return (
-        TOMTOM_KEY &&
-        !TOMTOM_KEY.includes("PASTE_YOUR")
-      );
+      locationName.textContent = name;
+      status.textContent = "Loading live traffic for " + name + "...";
     }
 
-    function setStatus(message, error = false) {
-      elements.status.textContent = message;
-      elements.status.style.color = error ? "#b22f24" : "#6b7773";
-    }
+    wazeMap.addEventListener("load", function () {
+      status.textContent =
+        "Live traffic loaded. Zoom in to see traffic jams and reports.";
+    });
 
-    function formatTime(seconds) {
-      const totalMinutes = Math.max(1, Math.round(seconds / 60));
+    searchForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
 
-      if (totalMinutes < 60) {
-        return totalMinutes + " min";
+      const place = placeInput.value.trim();
+
+      if (!place) {
+        status.textContent = "Please enter a place name.";
+        return;
       }
 
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
+      searchButton.disabled = true;
+      searchButton.textContent = "Wait";
+      status.textContent = "Searching for " + place + "...";
 
-      return hours + "h " + minutes + "m";
-    }
+      try {
+        const query = place.toLowerCase().includes("bangladesh")
+          ? place
+          : place + ", Bangladesh";
 
-    function markerIcon(type) {
-      return L.divIcon({
-        className: "",
-        html:
-          '<div class="marker-label ' +
-          (type === "end" ? "end" : "") +
-          '">' +
-          (type === "start" ? "A" : "B") +
-          "</div>",
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-      });
-    }
+        const url =
+          "https://nominatim.openstreetmap.org/search" +
+          "?format=jsonv2" +
+          "&limit=1" +
+          "&countrycodes=bd" +
+          "&accept-language=en" +
+          "&q=" + encodeURIComponent(query);
 
-    function setPoint(type, point, label) {
-      state[type] = {
-        lat: Number(point.lat),
-        lng: Number(point.lng)
-      };
+        const response = await fetch(url);
 
-      const markerName =
-        type === "start" ? "startMarker" : "endMarker";
-
-      if (state[markerName]) {
-        map.removeLayer(state[markerName]);
-      }
-
-      state[markerName] = L.marker(
-        [state[type].lat, state[type].lng],
-        {
-          icon: markerIcon(type),
-          draggable: true
+        if (!response.ok) {
+          throw new Error("Search service unavailable");
         }
-      ).addTo(map);
 
-      state[markerName].on("dragend", function (event) {
-        const moved = event.target.getLatLng();
+        const results = await response.json();
 
-        setPoint(
-          type,
-          moved,
-          moved.lat.toFixed(5) + ", " + moved.lng.toFixed(5)
-        );
-      });
+        if (!results.length) {
+          status.textContent =
+            "Place not found. Try adding the district or city name.";
+          return;
+        }
 
-      if (type === "start") {
-        elements.startInput.value =
-          label ||
-          state.start.lat.toFixed(5) +
-          ", " +
-          state.start.lng.toFixed(5);
+        const result = results[0];
 
-        state.picking = "end";
-        setStatus("Now select your destination.");
-      } else {
-        elements.endInput.value =
-          label ||
-          state.end.lat.toFixed(5) +
-          ", " +
-          state.end.lng.toFixed(5);
-
-        setStatus("Ready to find the live-traffic route.");
-      }
-    }
-
-    function clearRouteLayers() {
-      state.routeLayers.forEach(function (layer) {
-        map.removeLayer(layer);
-      });
-
-      state.routeLayers = [];
-    }
-
-    function toggleTraffic() {
-      if (!hasValidKey()) {
-        setStatus(
-          "Paste your new TomTom key in TOMTOM_KEY first.",
+        updateMap(
+          result.lat,
+          result.lon,
+          result.display_name,
+          15,
           true
         );
-        return;
+      } catch (error) {
+        status.textContent =
+          "Search failed. Please check your internet and try again.";
+      } finally {
+        searchButton.disabled = false;
+        searchButton.textContent = "Search";
       }
+    });
 
-      if (state.trafficVisible) {
-        map.removeLayer(trafficLayer);
-        state.trafficVisible = false;
-        elements.trafficButton.classList.remove("active");
-        setStatus("Live traffic hidden.");
-      } else {
-        trafficLayer.addTo(map);
-        state.trafficVisible = true;
-        elements.trafficButton.classList.add("active");
-        setStatus("TomTom live traffic is visible.");
-      }
-    }
-
-    function useGPS() {
+    gpsButton.addEventListener("click", function () {
       if (!navigator.geolocation) {
-        setStatus("GPS is not supported by this browser.", true);
+        status.textContent = "GPS is not supported by this browser.";
         return;
       }
 
-      setStatus("Finding your GPS location...");
+      gpsButton.disabled = true;
+      gpsButton.textContent = "Getting GPS...";
+      status.textContent = "Please allow location permission.";
 
       navigator.geolocation.getCurrentPosition(
         function (position) {
-          const point = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-
-          setPoint("start", point, "My current location");
-          map.setView([point.lat, point.lng], 16);
-          setStatus("GPS location selected as starting place.");
-        },
-        function () {
-          setStatus(
-            "Allow location permission and try again.",
+          updateMap(
+            position.coords.latitude,
+            position.coords.longitude,
+            "My current GPS location",
+            16,
             true
           );
+
+          gpsButton.disabled = false;
+          gpsButton.textContent = "📍 Show My GPS Location";
         },
+
+        function (error) {
+          let message = "Could not get your GPS location.";
+
+          if (error.code === 1) {
+            message =
+              "Location permission was denied. Allow location permission and try again.";
+          }
+
+          status.textContent = message;
+          gpsButton.disabled = false;
+          gpsButton.textContent = "📍 Show My GPS Location";
+        },
+
         {
           enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 20000
+          timeout: 12000,
+          maximumAge: 30000
         }
       );
-    }
-
-    async function geocode(placeName) {
-      const url =
-        "https://nominatim.openstreetmap.org/search" +
-        "?format=jsonv2" +
-        "&limit=1" +
-        "&countrycodes=bd" +
-        "&q=" +
-        encodeURIComponent(placeName);
-
-      const response = await fetch(url, {
-        headers: {
-          Accept: "application/json"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error("Place search failed.");
-      }
-
-      const results = await response.json();
-
-      if (!results.length) {
-        throw new Error(
-          'Could not find "' + placeName + '" in Bangladesh.'
-        );
-      }
-
-      return {
-        lat: Number(results[0].lat),
-        lng: Number(results[0].lon),
-        label: results[0].display_name
-      };
-    }
-
-    async function ensurePoints() {
-      if (
-        !state.start &&
-        elements.startInput.value.trim()
-      ) {
-        const startPlace = await geocode(
-          elements.startInput.value.trim()
-        );
-
-        setPoint(
-          "start",
-          startPlace,
-          startPlace.label
-        );
-      }
-
-      if (
-        !state.end &&
-        elements.endInput.value.trim()
-      ) {
-        const endPlace = await geocode(
-          elements.endInput.value.trim()
-        );
-
-        setPoint(
-          "end",
-          endPlace,
-          endPlace.label
-        );
-      }
-
-      if (!state.start || !state.end) {
-        throw new Error(
-          "Select both starting place and destination."
-        );
-      }
-    }
-
-    function normalizeRoute(route) {
-      const points = [];
-
-      (route.legs || []).forEach(function (leg, legIndex) {
-        (leg.points || []).forEach(function (
-          point,
-          pointIndex
-        ) {
-          if (
-            legIndex > 0 &&
-            pointIndex === 0 &&
-            points.length
-          ) {
-            return;
-          }
-
-          points.push([
-            point.latitude,
-            point.longitude
-          ]);
-        });
-      });
-
-      return {
-        points: points,
-        distance: route.summary.lengthInMeters,
-        duration: route.summary.travelTimeInSeconds,
-        delay: route.summary.trafficDelayInSeconds || 0
-      };
-    }
-
-    function displayRoutes(routes) {
-      clearRouteLayers();
-
-      routes.slice(1).forEach(function (route) {
-        const alternative = L.polyline(
-          route.points,
-          {
-            color: "#71877f",
-            weight: 5,
-            opacity: 0.55,
-            dashArray: "8 9"
-          }
-        ).addTo(map);
-
-        state.routeLayers.push(alternative);
-      });
-
-      const bestRoute = routes[0];
-
-      const routeBorder = L.polyline(
-        bestRoute.points,
-        {
-          color: "#ffffff",
-          weight: 11,
-          opacity: 0.95
-        }
-      ).addTo(map);
-
-      const routeLine = L.polyline(
-        bestRoute.points,
-        {
-          color: "#087852",
-          weight: 6,
-          opacity: 1
-        }
-      ).addTo(map);
-
-      state.routeLayers.push(routeBorder, routeLine);
-
-      map.fitBounds(routeLine.getBounds(), {
-        padding: [45, 45]
-      });
-
-      const vehicleFactor =
-        vehicleTimeFactor[elements.vehicle.value] || 1;
-
-      const adjustedDuration =
-        bestRoute.duration * vehicleFactor;
-
-      const delayMinutes = Math.max(
-        0,
-        Math.round(bestRoute.delay / 60)
-      );
-
-      elements.distance.textContent =
-        bestRoute.distance < 10000
-          ? (bestRoute.distance / 1000).toFixed(1) + " km"
-          : Math.round(bestRoute.distance / 1000) + " km";
-
-      elements.duration.textContent =
-        formatTime(adjustedDuration);
-
-      elements.delay.textContent =
-        delayMinutes > 0
-          ? "+" + delayMinutes + " min"
-          : "0 min";
-
-      elements.resultTitle.textContent =
-        routes.length > 1
-          ? "Best of " + routes.length + " routes"
-          : "Best route";
-
-      elements.trafficMessage.classList.toggle(
-        "slow",
-        delayMinutes >= 2
-      );
-
-      elements.trafficMessage.textContent =
-        delayMinutes > 0
-          ? "Live traffic adds about " +
-            delayMinutes +
-            " minutes."
-          : "No major live traffic delay detected.";
-
-      elements.result.classList.add("show");
-    }
-
-    async function findRoute() {
-      if (!hasValidKey()) {
-        setStatus(
-          "Paste your new TomTom key in TOMTOM_KEY first.",
-          true
-        );
-        return;
-      }
-
-      elements.routeButton.disabled = true;
-      elements.routeButton.textContent =
-        "Checking live traffic...";
-
-      try {
-        await ensurePoints();
-
-        const routePoints =
-          state.start.lat +
-          "," +
-          state.start.lng +
-          ":" +
-          state.end.lat +
-          "," +
-          state.end.lng;
-
-        const query = new URLSearchParams({
-          key: TOMTOM_KEY,
-          apiVersion: "2",
-          maxAlternatives: "2",
-          alternativeType: "anyRoute",
-          routeRepresentation: "polyline",
-          sectionType: "traffic",
-          departAt: "now",
-          routeType: "fast",
-          traffic: "live",
-          travelMode: "car"
-        });
-
-        const url =
-          "https://api.tomtom.com/maps/orbis/routing/" +
-          "calculateRoute/" +
-          routePoints +
-          "/json?" +
-          query.toString();
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.detailedError?.message ||
-            "TomTom route request failed."
-          );
-        }
-
-        if (!data.routes || !data.routes.length) {
-          throw new Error(
-            "No route was found between these places."
-          );
-        }
-
-        const routes = data.routes
-          .map(normalizeRoute)
-          .filter(function (route) {
-            return route.points.length > 1;
-          });
-
-        if (!routes.length) {
-          throw new Error(
-            "TomTom returned no route geometry."
-          );
-        }
-
-        displayRoutes(routes);
-        setStatus("Live-traffic route loaded.");
-      } catch (error) {
-        setStatus(
-          error.message || "Could not find the route.",
-          true
-        );
-      } finally {
-        elements.routeButton.disabled = false;
-        elements.routeButton.textContent =
-          "Find live-traffic route";
-      }
-    }
-
-    function swapPlaces() {
-      const oldStart = state.start;
-      const oldEnd = state.end;
-      const oldStartText = elements.startInput.value;
-      const oldEndText = elements.endInput.value;
-
-      if (state.startMarker) {
-        map.removeLayer(state.startMarker);
-      }
-
-      if (state.endMarker) {
-        map.removeLayer(state.endMarker);
-      }
-
-      state.start = null;
-      state.end = null;
-      state.startMarker = null;
-      state.endMarker = null;
-
-      elements.startInput.value = "";
-      elements.endInput.value = "";
-
-      if (oldEnd) {
-        setPoint("start", oldEnd, oldEndText);
-      } else {
-        elements.startInput.value = oldEndText;
-      }
-
-      if (oldStart) {
-        setPoint("end", oldStart, oldStartText);
-      } else {
-        elements.endInput.value = oldStartText;
-      }
-
-      clearRouteLayers();
-      elements.result.classList.remove("show");
-    }
-
-    map.on("click", function (event) {
-      setPoint(state.picking, event.latlng);
     });
 
-    elements.startInput.addEventListener(
-      "input",
-      function () {
-        state.start = null;
-      }
-    );
+    document.querySelectorAll(".place-button").forEach(function (button) {
+      button.addEventListener("click", function () {
+        updateMap(
+          button.dataset.lat,
+          button.dataset.lon,
+          button.dataset.name + ", Bangladesh",
+          button.dataset.zoom,
+          false
+        );
+      });
+    });
 
-    elements.endInput.addEventListener(
-      "input",
-      function () {
-        state.end = null;
-      }
-    );
+    navigateButton.addEventListener("click", function () {
+      const navigationUrl =
+        "https://www.waze.com/ul" +
+        "?ll=" +
+        encodeURIComponent(currentLatitude + "," + currentLongitude) +
+        "&navigate=yes" +
+        "&zoom=17";
 
-    elements.pickStartButton.addEventListener(
-      "click",
-      function () {
-        state.picking = "start";
-        setStatus("Tap the map to select starting place.");
-      }
-    );
-
-    elements.pickEndButton.addEventListener(
-      "click",
-      function () {
-        state.picking = "end";
-        setStatus("Tap the map to select destination.");
-      }
-    );
-
-    elements.routeButton.addEventListener(
-      "click",
-      findRoute
-    );
-
-    elements.trafficButton.addEventListener(
-      "click",
-      toggleTraffic
-    );
-
-    elements.gpsButton.addEventListener(
-      "click",
-      useGPS
-    );
-
-    elements.locationButton.addEventListener(
-      "click",
-      useGPS
-    );
-
-    elements.swapButton.addEventListener(
-      "click",
-      swapPlaces
-    );
-
-    if (hasValidKey()) {
-      trafficLayer.addTo(map);
-      state.trafficVisible = true;
-      elements.trafficButton.classList.add("active");
-      setStatus(
-        "Live traffic is active. Select start and destination."
-      );
-    }
-
-    setInterval(function () {
-      if (state.trafficVisible) {
-        trafficLayer.redraw();
-      }
-    }, 60000);
+      window.open(navigationUrl, "_blank", "noopener,noreferrer");
+    });
   </script>
 </body>
 </html>
